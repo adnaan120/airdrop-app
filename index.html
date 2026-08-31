@@ -1,536 +1,78 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>ATF Miner Mini App</title>
-    <!-- Telegram Web App SDK -->
+    <title>Solve Captcha & Claim</title>
+    <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        body {
-            background-color: #0c0d12;
-            color: #ffffff;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        /* Top Header */
-        .header {
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(12, 13, 18, 0.9);
-            border-bottom: 1px solid rgba(255, 185, 0, 0.1);
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: bold;
-            font-size: 15px;
-        }
-
-        .badge-lvl {
-            background: #252836;
-            color: #ffb900;
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-size: 11px;
-            border: 1px solid #ffb900;
-        }
-
-        .btn-wallet {
-            background: #0088cc;
-            color: #fff;
-            border: none;
-            padding: 8px 14px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            cursor: pointer;
-        }
-
-        /* Main Container & Screens */
-        .container {
-            flex: 1;
-            overflow-y: auto;
-            padding-bottom: 80px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .screen {
-            display: none;
-            padding: 20px;
-            animation: fadeIn 0.2s ease-in-out;
-        }
-
-        .screen.active {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.98); }
-            to { opacity: 1; transform: scale(1); }
-        }
-
-        /* --- 1. MINE TAB --- */
-        .balance-card {
-            text-align: center;
-            margin: 15px 0 25px 0;
-        }
-
-        .balance-title {
-            font-size: 12px;
-            color: #8e94a5;
-            letter-spacing: 1px;
-        }
-
-        .balance-amount {
-            font-size: 36px;
-            font-weight: 800;
-            color: #ffffff;
-            margin: 5px 0;
-        }
-
-        .balance-amount span {
-            color: #ffb900;
-        }
-
-        .wallets-sub {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            font-size: 12px;
-            color: #a0a5b5;
-        }
-
-        .coin-container {
-            position: relative;
-            margin: 20px auto;
-            width: 230px;
-            height: 230px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-        }
-
-        .coin {
-            width: 220px;
-            height: 220px;
-            border-radius: 50%;
-            background: radial-gradient(circle, #ffcc00 0%, #b8860b 70%, #5c4300 100%);
-            border: 6px solid #ffe066;
-            box-shadow: 0 0 40px rgba(255, 185, 0, 0.4), inset 0 0 20px rgba(0,0,0,0.5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 42px;
-            font-weight: 900;
-            color: #2b1f00;
-            text-shadow: 1px 1px 2px #fff;
-            transition: transform 0.08s ease;
-        }
-
-        .coin:active {
-            transform: scale(0.94);
-        }
-
-        .btn-mine-action {
-            width: 90%;
-            max-width: 320px;
-            background: linear-gradient(180deg, #ffb900 0%, #d48b00 100%);
-            color: #1a1300;
-            font-size: 18px;
-            font-weight: 800;
-            padding: 16px;
-            border-radius: 16px;
-            border: none;
-            margin-top: 25px;
-            box-shadow: 0 4px 20px rgba(255, 185, 0, 0.3);
-            cursor: pointer;
-        }
-
-        /* --- 2. TASKS TAB --- */
-        .task-list {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .task-card {
-            background: #161822;
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 14px;
-            padding: 14px 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .task-info h4 {
-            font-size: 14px;
-            margin-bottom: 4px;
-        }
-
-        .task-info p {
-            font-size: 12px;
-            color: #ffb900;
-            font-weight: bold;
-        }
-
-        .task-btn {
-            background: #ffb900;
-            color: #000;
-            font-weight: bold;
-            font-size: 12px;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 20px;
-            cursor: pointer;
-        }
-
-        .task-btn.claimed {
-            background: #252836;
-            color: #5d6275;
-        }
-
-        /* --- 3. FRIENDS / REFERRAL TAB --- */
-        .ref-box {
-            width: 100%;
-            background: #161822;
-            padding: 16px;
-            border-radius: 14px;
-            margin-bottom: 15px;
-        }
-
-        .ref-link-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 10px;
-            background: #0c0d12;
-            padding: 8px 12px;
-            border-radius: 10px;
-        }
-
-        .ref-link-text {
-            font-size: 11px;
-            color: #8e94a5;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            max-width: 200px;
-        }
-
-        .btn-copy {
-            background: #ffb900;
-            color: #000;
-            font-weight: bold;
-            font-size: 12px;
-            border: none;
-            padding: 6px 14px;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-
-        /* Bottom Nav */
-        .nav-bar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 70px;
-            background: #12141c;
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            z-index: 100;
-        }
-
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            color: #656a7b;
-            font-size: 11px;
-            cursor: pointer;
-            width: 20%;
-        }
-
-        .nav-item.active {
-            color: #ffb900;
-        }
-
-        .nav-icon {
-            font-size: 20px;
-        }
-
-        /* Floating Score Effect */
-        .floating-num {
-            position: absolute;
-            font-size: 28px;
-            font-weight: 900;
-            color: #fff;
-            text-shadow: 0 0 10px #ffb900;
-            pointer-events: none;
-            animation: floatUp 0.7s ease-out forwards;
-        }
-
-        @keyframes floatUp {
-            0% { opacity: 1; transform: translateY(0); }
-            100% { opacity: 0; transform: translateY(-80px); }
-        }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:sans-serif; }
+        body { background:#0a0c10; color:#fff; text-align:center; padding:30px 20px; }
+        .step-bar { width:80px; height:4px; background:#222; margin:20px auto; border-radius:2px; display:flex; }
+        .step-active { width:50%; height:100%; background:#0088cc; border-radius:2px; }
+        .title { font-size:12px; color:#888; letter-spacing:1px; margin-bottom:25px; }
+        .math-q { font-size:42px; font-weight:bold; margin-bottom:35px; color:#fff; }
+        .btn-opt { display:block; width:100%; max-width:280px; margin:12px auto; padding:16px; background:#161922; color:#fff; font-size:20px; font-weight:bold; border:1px solid #2a2e3d; border-radius:12px; cursor:pointer; }
+        .btn-opt:active { background:#0088cc; }
+        .btn-ok { width:100%; max-width:280px; padding:16px; background:#0088cc; color:#fff; font-size:18px; font-weight:bold; border:none; border-radius:12px; margin-top:25px; cursor:pointer; }
     </style>
 </head>
 <body>
 
-    <!-- Header -->
-    <div class="header">
-        <div class="user-info">
-            <span id="userName">User</span> 🔥
-            <span class="badge-lvl">Lvl 1</span>
-        </div>
-        <button class="btn-wallet" onclick="connectWallet()">
-            💎 <span id="walletText">Connect Wallet</span>
-        </button>
+    <!-- Question 1 -->
+    <div id="q1_screen">
+        <div class="step-bar"><div class="step-active"></div></div>
+        <div class="title">QUESTION 1 OF 2</div>
+        <div class="math-q">17 + 8 = ?</div>
+        <button class="btn-opt" onclick="wrong()">21</button>
+        <button class="btn-opt" onclick="goQ2()">25</button>
+        <button class="btn-opt" onclick="wrong()">23</button>
     </div>
 
-    <!-- Container -->
-    <div class="container">
-        
-        <!-- 1. MINE TAB -->
-        <div id="tab-mine" class="screen active">
-            <div class="balance-card">
-                <div class="balance-title">TOTAL ASSETS</div>
-                <div class="balance-amount"><span id="balanceDisplay">0.0000</span> ATF</div>
-                <div class="wallets-sub">
-                    <div>Pool: <b style="color:#00ffaa;"><span id="poolDisplay">0.00</span> ATF</b></div>
-                    <div>Hold: <b>0 ATF</b></div>
-                </div>
-            </div>
-
-            <div class="coin-container" id="coinBtn">
-                <div class="coin">ATF</div>
-            </div>
-
-            <button class="btn-mine-action" onclick="tapCoin(event)">⚡ TAP TO MINE</button>
-        </div>
-
-        <!-- 2. TASKS TAB -->
-        <div id="tab-tasks" class="screen">
-            <h3 style="margin-bottom: 15px; width: 100%;">Earn Rewards</h3>
-            <div class="task-list">
-                <div class="task-card">
-                    <div class="task-info">
-                        <h4>📢 Join Telegram Channel</h4>
-                        <p>+50 ATF</p>
-                    </div>
-                    <button class="task-btn" onclick="claimTask(this, 50)">Claim</button>
-                </div>
-                <div class="task-card">
-                    <div class="task-info">
-                        <h4>🐦 Follow on X (Twitter)</h4>
-                        <p>+30 ATF</p>
-                    </div>
-                    <button class="task-btn" onclick="claimTask(this, 30)">Go</button>
-                </div>
-                <div class="task-card">
-                    <div class="task-info">
-                        <h4>📺 Subscribe YouTube Channel</h4>
-                        <p>+40 ATF</p>
-                    </div>
-                    <button class="task-btn" onclick="claimTask(this, 40)">Go</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- 3. MINERS TAB -->
-        <div id="tab-miners" class="screen">
-            <h3 style="margin-bottom: 15px; width: 100%;">Miner Store</h3>
-            <div class="task-list">
-                <div class="task-card" style="border: 1px solid #ffb900;">
-                    <div class="task-info">
-                        <h4>⚡ Basic Miner (Lvl 1)</h4>
-                        <p style="color:#aaa;">Speed: 0.20 TH/s</p>
-                    </div>
-                    <span style="color:#00ffaa; font-weight:bold; font-size:12px;">ACTIVE</span>
-                </div>
-                <div class="task-card">
-                    <div class="task-info">
-                        <h4>🚀 Pro Miner (Lvl 2)</h4>
-                        <p>Cost: 100 ATF • Speed: 1.50 TH/s</p>
-                    </div>
-                    <button class="task-btn" onclick="upgradeMiner(100)">Upgrade</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- 4. FRIENDS / REFERRAL TAB -->
-        <div id="tab-friends" class="screen">
-            <h3 style="margin-bottom: 15px; width: 100%;">Invite Friends</h3>
-            <div class="ref-box">
-                <h4>Your Invite Link</h4>
-                <div class="ref-link-row">
-                    <span class="ref-link-text" id="refLink">https://t.me/YourBot?start=ref123</span>
-                    <button class="btn-copy" onclick="copyRef()">Copy</button>
-                </div>
-            </div>
-            <div class="ref-box">
-                <div style="display:flex; justify-content:space-between;">
-                    <span>Referral Reward:</span>
-                    <b style="color:#ffb900;">+100 ATF each</b>
-                </div>
-            </div>
-        </div>
-
-        <!-- 5. PROFILE TAB -->
-        <div id="tab-profile" class="screen">
-            <h3 style="margin-bottom: 15px; width: 100%;">Your Profile</h3>
-            <div class="ref-box">
-                <p style="color:#8e94a5;">User ID:</p>
-                <h4 id="profileUserId">6777330238</h4>
-            </div>
-            <div class="ref-box">
-                <p style="color:#8e94a5;">Withdrawable Balance:</p>
-                <h2 style="color:#00ffaa; margin-top:5px;"><span id="profileBalance">0.00</span> ATF</h2>
-                <button class="btn-mine-action" style="width:100%; margin-top:15px; padding:12px;" onclick="alert('Withdrawals open soon!')">Withdraw</button>
-            </div>
-        </div>
-
+    <!-- Question 2 -->
+    <div id="q2_screen" style="display:none;">
+        <div class="step-bar"><div class="step-active" style="width:100%;"></div></div>
+        <div class="title">QUESTION 2 OF 2</div>
+        <div class="math-q">35 − 15 = ?</div>
+        <button class="btn-opt" onclick="goSuccess()">20</button>
+        <button class="btn-opt" onclick="wrong()">18</button>
+        <button class="btn-opt" onclick="wrong()">24</button>
     </div>
 
-    <!-- Bottom Navigation -->
-    <div class="nav-bar">
-        <div class="nav-item active" onclick="switchTab('mine', this)">
-            <div class="nav-icon">⛏️</div>
-            <div>Mine</div>
-        </div>
-        <div class="nav-item" onclick="switchTab('tasks', this)">
-            <div class="nav-icon">📝</div>
-            <div>Tasks</div>
-        </div>
-        <div class="nav-item" onclick="switchTab('miners', this)">
-            <div class="nav-icon">⚡</div>
-            <div>Miners</div>
-        </div>
-        <div class="nav-item" onclick="switchTab('friends', this)">
-            <div class="nav-icon">👥</div>
-            <div>Friends</div>
-        </div>
-        <div class="nav-item" onclick="switchTab('profile', this)">
-            <div class="nav-icon">👤</div>
-            <div>Profile</div>
-        </div>
+    <!-- Success Screen -->
+    <div id="success_screen" style="display:none; padding-top:40px;">
+        <div style="font-size:55px;">🎉</div>
+        <h2 style="margin:15px 0;">Verified!</h2>
+        <p style="color:#00ffaa; font-size:22px; font-weight:bold;">+0.0003 USDT</p>
+        <p style="color:#888; margin-top:10px; font-size:13px;">Tap OK to collect and close.</p>
+        <button class="btn-ok" onclick="closeApp()">OK</button>
     </div>
 
     <script>
-        // State
-        let balance = 0.00;
-        let userId = "6777330238";
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
 
-        // Init Telegram Web App
-        if (window.Telegram && window.Telegram.WebApp) {
-            const tg = window.Telegram.WebApp;
-            tg.ready();
-            tg.expand();
-            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-                document.getElementById('userName').innerText = tg.initDataUnsafe.user.first_name || "Miner";
-                userId = tg.initDataUnsafe.user.id || userId;
-                document.getElementById('profileUserId').innerText = userId;
-                document.getElementById('refLink').innerText = `https://t.me/YourAirdropBot?start=${userId}`;
-            }
+        function goQ2() {
+            document.getElementById('q1_screen').style.display = 'none';
+            document.getElementById('q2_screen').style.display = 'block';
         }
 
-        // Tap To Mine Function
-        function tapCoin(event) {
-            balance += 1.00;
-            updateBalance();
-
-            // Floating animation
-            const coinBtn = document.getElementById('coinBtn');
-            const floater = document.createElement('div');
-            floater.className = 'floating-num';
-            floater.innerText = '+1';
-            
-            floater.style.left = '50%';
-            floater.style.top = '40%';
-            coinBtn.appendChild(floater);
-
-            setTimeout(() => floater.remove(), 700);
+        function goSuccess() {
+            document.getElementById('q2_screen').style.display = 'none';
+            document.getElementById('success_screen').style.display = 'block';
         }
 
-        document.getElementById('coinBtn').addEventListener('click', tapCoin);
-
-        function updateBalance() {
-            document.getElementById('balanceDisplay').innerText = balance.toFixed(2);
-            document.getElementById('poolDisplay').innerText = balance.toFixed(2);
-            document.getElementById('profileBalance').innerText = balance.toFixed(2);
+        function wrong() {
+            alert("❌ Wrong answer! Try again.");
         }
 
-        // Switch Tabs
-        function switchTab(tabId, el) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            
-            document.getElementById(`tab-${tabId}`).classList.add('active');
-            el.classList.add('active');
-        }
-
-        // Claim Task
-        function claimTask(btn, reward) {
-            if (btn.classList.contains('claimed')) return;
-            balance += reward;
-            updateBalance();
-            btn.innerText = "Done ✅";
-            btn.classList.add('claimed');
-        }
-
-        // Connect Wallet simulation
-        function connectWallet() {
-            document.getElementById('walletText').innerText = "UQDx...718b (Connected)";
-            alert("TON Wallet Connected Successfully!");
-        }
-
-        // Copy Referral
-        function copyRef() {
-            const link = document.getElementById('refLink').innerText;
-            navigator.clipboard.writeText(link);
-            alert("Referral Link Copied! Share with friends to earn +100 ATF.");
-        }
-
-        // Upgrade Miner
-        function upgradeMiner(cost) {
-            if (balance >= cost) {
-                balance -= cost;
-                updateBalance();
-                alert("Miner Upgraded to Level 2! Mining speed increased.");
-            } else {
-                alert(`Insufficient Balance! You need ${cost} ATF to upgrade.`);
-            }
+        function closeApp() {
+            // Halkan waxaa toos loogu xiraa Monetag SmartLink
+            window.open("https://t.me/Alpha_Protocoll", "_blank");
+            tg.close();
         }
     </script>
 </body>
-  </html>
+    </html>
