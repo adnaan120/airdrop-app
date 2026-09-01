@@ -4,25 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Solve Captcha & Claim</title>
-    <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * { margin:0; padding:0; box-sizing:border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; user-select:none; }
         body { background:#0a0c10; color:#fff; text-align:center; padding:30px 20px; min-height:100vh; display:flex; flex-direction:column; justify-content:center; }
         .step-bar { width:80px; height:4px; background:#222; margin:0 auto 20px auto; border-radius:2px; display:flex; }
-        .step-active { width:50%; height:100%; background:#0088cc; border-radius:2px; transition: width 0.3s ease; }
+        .step-active { width:50%; height:100%; background:#0088cc; border-radius:2px; }
         .title { font-size:12px; color:#8e94a5; letter-spacing:1px; margin-bottom:20px; font-weight:bold; }
         .math-q { font-size:46px; font-weight:900; margin-bottom:35px; color:#ffffff; }
-        .btn-opt { display:block; width:100%; max-width:280px; margin:12px auto; padding:16px; background:#161922; color:#fff; font-size:22px; font-weight:bold; border:1px solid #2a2e3d; border-radius:14px; cursor:pointer; transition: transform 0.1s; }
-        .btn-opt:active { background:#0088cc; transform: scale(0.96); }
-        .btn-ok { width:100%; max-width:280px; padding:16px; background:#0088cc; color:#fff; font-size:18px; font-weight:bold; border:none; border-radius:14px; margin-top:25px; cursor:pointer; box-shadow: 0 4px 15px rgba(0, 136, 204, 0.4); }
+        .btn-opt { display:block; width:100%; max-width:280px; margin:12px auto; padding:16px; background:#161922; color:#fff; font-size:22px; font-weight:bold; border:1px solid #2a2e3d; border-radius:14px; cursor:pointer; }
+        .btn-opt:active { background:#0088cc; }
+        .btn-ok { width:100%; max-width:280px; padding:16px; background:#0088cc; color:#fff; font-size:18px; font-weight:bold; border:none; border-radius:14px; margin-top:25px; cursor:pointer; }
     </style>
 </head>
 <body>
 
     <!-- QUESTION 1 -->
     <div id="q1_screen">
-        <div class="step-bar"><div class="step-active" id="bar1"></div></div>
+        <div class="step-bar"><div class="step-active"></div></div>
         <div class="title">QUESTION 1 OF 2</div>
         <div class="math-q" id="q1_text">-- + -- = ?</div>
         <div id="q1_buttons"></div>
@@ -42,7 +41,7 @@
         <h2 style="margin:15px 0; font-size:28px;">Verified!</h2>
         <p style="color:#00ffaa; font-size:24px; font-weight:bold;">+0.0003 USDT</p>
         <p style="color:#8e94a5; margin-top:10px; font-size:14px;">Tap OK to collect your reward.</p>
-        <button class="btn-ok" onclick="claimAndClose()">OK</button>
+        <button class="btn-ok" onclick="closeApp()">OK</button>
     </div>
 
     <script>
@@ -50,94 +49,71 @@
         tg.ready();
         tg.expand();
 
-        let ans1 = 0;
-        let ans2 = 0;
+        let ans1 = 0, ans2 = 0;
 
-        function rand(min, max) {
-            return Math.floor(Math.random() * (max - min + 1)) + min;
-        }
-
-        function shuffle(array) {
-            return array.sort(() => Math.random() - 0.5);
-        }
+        function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+        function shuffle(arr) { return arr.sort(() => Math.random() - 0.5); }
 
         function initQ1() {
-            let a = rand(10, 35);
-            let b = rand(3, 20);
+            let a = rand(10, 35), b = rand(3, 20);
             ans1 = a + b;
             document.getElementById('q1_text').innerText = `${a} + ${b} = ?`;
-
-            let wrong1 = ans1 + rand(1, 4);
-            let wrong2 = Math.max(1, ans1 - rand(1, 4));
+            let wrong1 = ans1 + rand(1, 4), wrong2 = Math.max(1, ans1 - rand(1, 4));
             if (wrong1 === wrong2) wrong2 += 2;
-
             let opts = shuffle([ans1, wrong1, wrong2]);
             let container = document.getElementById('q1_buttons');
             container.innerHTML = '';
-
             opts.forEach(val => {
                 let btn = document.createElement('button');
                 btn.className = 'btn-opt';
                 btn.innerText = val;
-                btn.onclick = () => checkQ1(val);
+                btn.onclick = () => {
+                    if (val === ans1) {
+                        document.getElementById('q1_screen').style.display = 'none';
+                        document.getElementById('q2_screen').style.display = 'block';
+                        initQ2();
+                    } else {
+                        alert("❌ Wrong answer! Try again.");
+                        initQ1();
+                    }
+                };
                 container.appendChild(btn);
             });
-        }
-
-        function checkQ1(val) {
-            if (val === ans1) {
-                document.getElementById('q1_screen').style.display = 'none';
-                document.getElementById('q2_screen').style.display = 'block';
-                initQ2();
-            } else {
-                alert("❌ Wrong answer! Try again.");
-                initQ1();
-            }
         }
 
         function initQ2() {
-            let c = rand(25, 60);
-            let d = rand(5, 20);
+            let c = rand(25, 60), d = rand(5, 20);
             ans2 = c - d;
             document.getElementById('q2_text').innerText = `${c} − ${d} = ?`;
-
-            let wrong1 = ans2 + rand(1, 5);
-            let wrong2 = Math.max(1, ans2 - rand(1, 4));
+            let wrong1 = ans2 + rand(1, 5), wrong2 = Math.max(1, ans2 - rand(1, 4));
             if (wrong1 === wrong2) wrong2 += 2;
-
             let opts = shuffle([ans2, wrong1, wrong2]);
             let container = document.getElementById('q2_buttons');
             container.innerHTML = '';
-
             opts.forEach(val => {
                 let btn = document.createElement('button');
                 btn.className = 'btn-opt';
                 btn.innerText = val;
-                btn.onclick = () => checkQ2(val);
+                btn.onclick = () => {
+                    if (val === ans2) {
+                        document.getElementById('q2_screen').style.display = 'none';
+                        document.getElementById('success_screen').style.display = 'block';
+                    } else {
+                        alert("❌ Wrong answer! Try again.");
+                        initQ2();
+                    }
+                };
                 container.appendChild(btn);
             });
         }
 
-        function checkQ2(val) {
-            if (val === ans2) {
-                document.getElementById('q2_screen').style.display = 'none';
-                document.getElementById('success_screen').style.display = 'block';
-            } else {
-                alert("❌ Wrong answer! Try again.");
-                initQ2();
-            }
-        }
-
-        function claimAndClose() {
-            // Signal to Bot that Captcha is Completed
+        function closeApp() {
+            // Send data to Telegram & Close cleanly (No Channel Redirect!)
             tg.sendData("captcha_completed");
-            
-            // Monetag Ad Trigger / Redirect
-            window.open("https://t.me/Alpha_Protocoll", "_blank");
             tg.close();
         }
 
         initQ1();
     </script>
 </body>
-</html>
+    </html>
